@@ -1,14 +1,12 @@
 int read_int() {
   char ch;
-  int num = 0;
-  int sign = 1;
+  int num, sign;
+  ch = ' ';
+  num = 0;
+  sign = 1;
   
-  while (1) {
+  while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
     read(0, &ch, 1);
-    if (ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r') {
-      break;
-    }
-  }
   
   if (ch == '-') {
     sign = -1;
@@ -25,13 +23,42 @@ int read_int() {
   return num * sign;
 }
 
+void printint(int n) {
+  char *buf;
+  int i;
+  int sign;
+  i = 0; sign = 0;
+  buf = (char *)malloc(20);
+  if (n < 0) {
+    sign = 1;
+    n = -n;
+  }
+  
+  if (n == 0) {
+    putchar('0');
+    return;
+  }
+  
+  while (n > 0) {
+    buf[i++] = '0' + (n % 10);
+    n = n / 10;
+  }
+  
+  if (sign) putchar('-');
+  
+  while (i > 0) {
+    putchar(buf[--i]);
+  }
+}
+
 int main() {
   int a,b;
 
   a = read_int();
   b = read_int();
 
-  printf("%d\n", a + b);
+  printint(a + b);
+  putchar('\n');
 
   return 0;
 }
