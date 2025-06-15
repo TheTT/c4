@@ -24,8 +24,6 @@ int *e, *le,  // current position in emitted code
     ty,       // current expression type
     loc,      // local variable offset
     line;     // current line number
-    // src,      // print source and assembly flag
-    // debug;    // print executed instructions
 
 // tokens and classes (operators last and in precedence order)
 enum {
@@ -87,16 +85,6 @@ void next()
   while (tk = *p) {
     ++p;
     if (tk == '\n') {
-      // if (src) {
-      //   printf("%d: %.*s", line, p - lp, lp);
-      //   lp = p;
-      //   while (le < e) {
-      //     printf("%8.4s", &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
-      //                      "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
-      //                      "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[*++le * 5]);
-      //     if (*le <= ADJ) printf(" %d\n", *++le); else printf("\n");
-      //   }
-      // }
       ++line;
     }
     else if (tk == '#') {
@@ -368,8 +356,6 @@ int main(int argc, char **argv)
   int i, *t; // temps
 
   --argc; ++argv;
-  // if (argc > 0 && **argv == '-' && (*argv)[1] == 's') { src = 1; --argc; ++argv; }
-  // if (argc > 0 && **argv == '-' && (*argv)[1] == 'd') { debug = 1; --argc; ++argv; }
   if (argc < 1) { printstr("usage: c4 file ...\n"); return -1; }
 
   if ((fd = open(*argv, 0)) < 0) { printstr("could not open("); printstr(*argv); printstr(")\n"); return -1; }
@@ -501,13 +487,6 @@ int main(int argc, char **argv)
   cycle = 0;
   while (1) {
     i = *pc++; ++cycle;
-    // if (debug) {
-    //   printf("%d> %.4s", cycle,
-    //     &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
-    //      "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
-    //      "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[i * 5]);
-    //   if (i <= ADJ) printf(" %d\n", *pc); else printf("\n");
-    // }
     if      (i == LEA) a = (int)(bp + *pc++);                             // load local address
     else if (i == IMM) a = *pc++;                                         // load global address or immediate
     else if (i == JMP) pc = (int *)*pc;                                   // jump
