@@ -23,9 +23,9 @@ int *e, *le,  // current position in emitted code
     ival,     // current token value
     ty,       // current expression type
     loc,      // local variable offset
-    line,     // current line number
-    src,      // print source and assembly flag
-    debug;    // print executed instructions
+    line;     // current line number
+    // src,      // print source and assembly flag
+    // debug;    // print executed instructions
 
 // tokens and classes (operators last and in precedence order)
 enum {
@@ -37,7 +37,7 @@ enum {
 // opcodes
 enum { LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,
        OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,
-       OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT };
+       OPEN,GETCH,CLOS,PUTCH,MALC,FREE,MSET,MCMP,EXIT };
 
 // types
 enum { CHAR, INT, PTR };
@@ -52,16 +52,16 @@ void next()
   while (tk = *p) {
     ++p;
     if (tk == '\n') {
-      if (src) {
-        printf("%d: %.*s", line, p - lp, lp);
-        lp = p;
-        while (le < e) {
-          printf("%8.4s", &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
-                           "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
-                           "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[*++le * 5]);
-          if (*le <= ADJ) printf(" %d\n", *++le); else printf("\n");
-        }
-      }
+      // if (src) {
+      //   printf("%d: %.*s", line, p - lp, lp);
+      //   lp = p;
+      //   while (le < e) {
+      //     printf("%8.4s", &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
+      //                      "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
+      //                      "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[*++le * 5]);
+      //     if (*le <= ADJ) printf(" %d\n", *++le); else printf("\n");
+      //   }
+      // }
       ++line;
     }
     else if (tk == '#') {
@@ -337,9 +337,9 @@ int main(int argc, char **argv)
   int i, *t; // temps
 
   --argc; ++argv;
-  if (argc > 0 && **argv == '-' && (*argv)[1] == 's') { src = 1; --argc; ++argv; }
-  if (argc > 0 && **argv == '-' && (*argv)[1] == 'd') { debug = 1; --argc; ++argv; }
-  if (argc < 1) { printf("usage: c4 [-s] [-d] file ...\n"); return -1; }
+  // if (argc > 0 && **argv == '-' && (*argv)[1] == 's') { src = 1; --argc; ++argv; }
+  // if (argc > 0 && **argv == '-' && (*argv)[1] == 'd') { debug = 1; --argc; ++argv; }
+  if (argc < 1) { printf("usage: c4 file ...\n"); return -1; }
 
   if ((fd = open(*argv, 0)) < 0) { printf("could not open(%s)\n", *argv); return -1; }
 
@@ -352,9 +352,8 @@ int main(int argc, char **argv)
   memset(sym,  0, poolsz);
   memset(e,    0, poolsz);
   memset(data, 0, poolsz);
-
   p = "char else enum if int return sizeof while "
-      "open read close printf malloc free memset memcmp exit void main";
+      "open getchar close putchar malloc free memset memcmp exit void main";
   i = Char; while (i <= While) { next(); id[Tk] = i++; } // add keywords to symbol table
   i = OPEN; while (i <= EXIT) { next(); id[Class] = Sys; id[Type] = INT; id[Val] = i++; } // add library to symbol table
   next(); id[Tk] = Char; // handle void type
@@ -461,7 +460,7 @@ int main(int argc, char **argv)
   }
 
   if (!(pc = (int *)idmain[Val])) { printf("main() not defined\n"); return -1; }
-  if (src) return 0;
+  // if (src) return 0;
 
   // setup stack
   bp = sp = (int *)((int)sp + poolsz);
@@ -475,13 +474,13 @@ int main(int argc, char **argv)
   cycle = 0;
   while (1) {
     i = *pc++; ++cycle;
-    if (debug) {
-      printf("%d> %.4s", cycle,
-        &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
-         "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
-         "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[i * 5]);
-      if (i <= ADJ) printf(" %d\n", *pc); else printf("\n");
-    }
+    // if (debug) {
+    //   printf("%d> %.4s", cycle,
+    //     &"LEA ,IMM ,JMP ,JSR ,BZ  ,BNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
+    //      "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
+    //      "OPEN,READ,CLOS,PRTF,MALC,FREE,MSET,MCMP,EXIT,"[i * 5]);
+    //   if (i <= ADJ) printf(" %d\n", *pc); else printf("\n");
+    // }
     if      (i == LEA) a = (int)(bp + *pc++);                             // load local address
     else if (i == IMM) a = *pc++;                                         // load global address or immediate
     else if (i == JMP) pc = (int *)*pc;                                   // jump
@@ -513,11 +512,10 @@ int main(int argc, char **argv)
     else if (i == MUL) a = *sp++ *  a;
     else if (i == DIV) a = *sp++ /  a;
     else if (i == MOD) a = *sp++ %  a;
-
     else if (i == OPEN) a = open((char *)sp[1], *sp);
-    else if (i == READ) a = read(sp[2], (char *)sp[1], *sp);
+    else if (i == GETCH) a = getchar();
     else if (i == CLOS) a = close(*sp);
-    else if (i == PRTF) { t = sp + pc[1]; a = printf((char *)t[-1], t[-2], t[-3], t[-4], t[-5], t[-6]); }
+    else if (i == PUTCH) a = putchar(*sp);
     else if (i == MALC) a = (int)malloc(*sp);
     else if (i == FREE) free((void *)*sp);
     else if (i == MSET) a = (int)memset((char *)sp[2], sp[1], *sp);
